@@ -1,0 +1,12 @@
+02-09-2016
+
+Files
+
+
+Database:
+Table productfees
+	added column fee_account_id (to be linked to fees table)
+	
+	
+	
+	

@@ -1,0 +1,15 @@
+Processes of a Loan Cycle
+1. Loan Application
+2. Loan Approval
+3. Loan Disbursement
+4. Loan Repayment
+5. Loan Closure
+
+Sa Loan Application - we need A) Client, B) Loan Officer, C) Manager D) Appraiser
+[11:03:58 AM] Jubert Maquiling: So una nga activity, item #1. Loan Application
+[11:04:27 AM] Jubert Maquiling: Participants will be distributed by Players. On the list we gave, there are 4 players. So each group will have at least 4 members
+[11:04:46 AM] Jubert Maquiling: So count-off 1-4.
+
+[11:07:05 AM] Jubert Maquiling: NOTE: Each cycle should end with lessons learned
+[11:07:42 AM] Jubert Maquiling: Pero, put this on writing. Example, each team must write 3 issues they see sa process. Then this will be read to everyone
+[11:08:02 AM] Jubert Maquiling: Pwede discuss dayon, pwede padayon sa process #2

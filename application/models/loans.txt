@@ -1,0 +1,15 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Loans extends CI_Model {
+
+func
+
+$sql = "SELECT loanschedule.`DueDate`, loanschedule.`AmountDue`, loanapplication.`PN` FROM pensioninfo
+		JOIN loanapplication ON loanapplication.`pensionID` = pensioninfo.`PensionID`
+		JOIN loanschedule ON loanschedule.`loanID` = loanapplication.`loanID`
+		WHERE pensioninfo.`PensionID` = '$loaninfo->pensionID'
+		AND loanschedule.`DueDate` > NOW() and loanapplication.status <> 'canceled' and loanapplication.status <> 'closed'
+		ORDER BY DueDate ASC";
+	$pl = $this->db->query($sql);
+	
+?>
