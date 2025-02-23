@@ -1,0 +1,386 @@
+<script type="text/javascript" src="<?php echo base_url();?>assets/js/modaljs.js"></script>
+<script type="text/javascript" src="<?php echo base_url();?>assets/js/jquery.freezeheader.js"></script>
+<?php 
+if(isset($error)) echo '<div class="alert alert-danger">'.$error.'</div>';
+if($action == 'update' and $actionid == '1') echo '<div class="alert alert-success">Transaction was updated.</div>';
+elseif($action == 'remove' and $actionid == '1') echo '<div class="alert alert-danger">Transaction was removed.</div>';
+if(isset($success)) echo '<div class="alert alert-success">'.$success.'</div>';
+echo validation_errors();
+
+$branch = $branch->row();
+//echo $transdate;
+?>
+<div class="panel panel-primary"><div class="panel-heading"><b><?php echo $branch->branchname;?> </b><p class="pull-right">CMC Date: <?php echo date("F d, Y", strtotime($transdate));?></p></div>
+	
+	<!-- LINKS -->
+	<ul class="nav nav-tabs" id="myTab">
+		<li class="active"><a href="#banks" data-toggle="tab">Banks</a></li>
+		<li><a href="#collections" data-toggle="tab">Collections</a></li>
+		<li><a href="#disbursement" data-toggle="tab">Disbursements</a></li>
+		<li><a href="#adjustments" data-toggle="tab">Adjustments</a></li>
+		<li><a href="#recap" data-toggle="tab">Recap of Deposits</a></li>
+	</ul>
+	
+	<div class="tab-content">
+		<?php $tmpl = array ('table_open'          => '<table class="gridView table table-bordered table-condensed table-hover tablesort" >',
+					'thead_open' => '<thead class="header">'	);
+				$this->table->set_template($tmpl);
+			?>
+	  <div class="tab-pane active" id="banks"><!-- BANKS -->
+		<div class="panel panel-info"><div class="panel-heading">&nbsp;<?php if($this->auth->perms("Cash.Bank Accounts", $this->auth->user_id(), 1) == true) { ?><a href="<?php echo base_url();?>cash/branches/details/<?php echo $branchid;?>" class="btn btn-primary btn-xs" >Add Bank Account</a> <?php } ?></div>
+		<?php echo $this->cash->banksByTransID($branchid, $transid, $cmcstatus, $transdate);?>
+		</div>
+	</div>
+		<?php /*$tmpl = array ('table_open'          => '<table class="gridView table  table-condensed table-hover tablesort" id="collectee">',
+					'thead_open' => '<thead class="header">'	); 
+					$this->table->set_template($tmpl); */?>
+	<div class="tab-pane" id="collections"><!-- TOTAL COLLECTIONS -->
+		<div class="panel panel-success">
+		<div class="panel-heading">&nbsp;<?php if($this->auth->perms("Cash.Collections", $this->auth->user_id(), 1) == true  and $cmcstatus == 'open') { ?><button class="btn btn-success btn-xs" data-toggle="modal" data-target="#collection" data-backdrop="static">Add Collection</button> <?php } ?></div>	
+		 <div class="fixed-table">
+		 <div class="table-content" id="col">
+		 <?php $tmpl = array ('table_open'          => '<table class="gridView table table-bordered table-condensed table-hover" id="coltable" >',
+					'thead_open' => '<thead class="header">'	);
+				$this->table->set_template($tmpl);
+			?>
+			<?php	echo $this->cash->collectionByTransID($transid, $cmcstatus);?>
+			</div>
+			</div>
+		</div>
+	</div>
+	<?php $tmpl = array ('table_open'          => '<table class=" gridView table table-bordered table-condensed table-hover tablesort" id="disbursee">',
+					'thead_open' => '<thead class="header">'	); 
+					$this->table->set_template($tmpl);
+					?>
+	<div class="tab-pane" id="disbursement"><!-- TOTAL DISBURSEMENT -->	
+		<div class="panel panel-danger"><div class="panel-heading">&nbsp; <?php if($this->auth->perms("Cash.Disbursements", $this->auth->user_id(), 1) == true  and $cmcstatus == 'open') { ?> <button class="btn btn-danger btn-xs" data-toggle="modal" data-target="#disburse" data-backdrop="static">Add Disbursement</button> <?php } ?></div>
+		<div class="table-content" id="dis">
+		<?php echo $this->cash->disbursementByTransID($transid, $cmcstatus);?>
+		</div>
+		</div>
+	</div>	
+	
+	<?php $tmpl = array ('table_open'          => '<table class="gridView table table-bordered table-condensed table-hover tablesort" id="adjustee">',
+					'thead_open' => '<thead class="header">'	); 
+					$this->table->set_template($tmpl);
+					?>
+	<div class="tab-pane" id="adjustments"><!-- TOTAL ADJUSTMENT -->	
+		<div class="panel panel-warning"><div class="panel-heading">&nbsp; <?php if($this->auth->perms("Cash.Adjustments", $this->auth->user_id(), 1) == true  and $cmcstatus == 'open') { ?> <button class="btn btn-warning btn-xs" data-toggle="modal" data-target="#adjust" data-backdrop="static">Add Adjustment</button> <?php } ?></div>
+		<div class="table-content" id="adj">
+		<?php echo $this->cash->adjustmentByTransID($transid, $cmcstatus);?>
+		</div>
+		</div>
+	</div>	
+	<?php $tmpl = array ('table_open'          => '<table class="gridView table table-bordered table-condensed table-hover tablesort" id="recapee">',
+					'thead_open' => '<thead class="header">'	); 
+					$this->table->set_template($tmpl);
+					?>
+	<div class="tab-pane" id="recap">
+		<div class="panel panel-warning">
+			<div class="panel-heading">
+			<?php if($this->auth->perms("Cash.Recap of Deposits", $this->auth->user_id(), 1) == true  and $cmcstatus == 'open') { ?><button class="btn btn-warning btn-xs" data-toggle="modal" data-target="#deposit" data-backdrop="static">Add Deposit</button> <?php } ?>
+			</div>
+			<?php echo $this->load->view('cash/recap');?>
+		</div>
+	</div>
+	</div>	
+	
+<div class="panel-footer">
+
+<?php switch ($cmcstatus){
+		case "open":
+			echo "Transaction is still open.";
+			if( $this->auth->perms("Cash.Transactions", $this->auth->user_id(), 3) == true) {
+				echo '<form action="'.current_url().'" id="managetrans" method="post">';
+				$data = array(
+				  'type'        => 'hidden',
+				  'name'          => 'transid',
+				  'value'       =>  $transid
+				);
+				echo form_input($data);
+				
+				$data2 = array(
+				  'type'        => 'hidden',
+				  'name'          => 'update',
+				  'value'       =>  "LOCK CMC");
+				echo form_input($data2);
+				
+				$data3 = array(
+				  'type'        => 'submit',
+				  'name'          => 'update',
+				  'value'       =>  "LOCK CMC",
+				  'id' => 'locktrans',
+				  'class' => "btn btn-danger btn-xs"
+				);
+				echo form_input($data3);
+				echo "&nbsp;";
+				echo "&nbsp;";
+				echo "<a href='".base_url()."cash/daily/report/".$transid."' class='btn btn-warning btn-xs' target='_blank'>Preview CMC</a>";
+				echo '</form>';
+			}
+		break;
+		case "lock":
+			echo "Prepared by : ";
+			echo "<b>".$closedBy."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($closedate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			if( $this->auth->perms("Cash.Transactions", $this->auth->user_id(), 3) == true) {
+			echo '<form action="'.current_url().'" id="opentransaction" method="post">';
+				$data = array(
+				  'type'        => 'hidden',
+				  'name'          => 'transid',
+				  'value'       =>  $transid
+				);
+				echo form_input($data);
+				
+				$data2 = array(
+				  'type'        => 'hidden',
+				  'name'          => 'update',
+				  'value'       =>  "OPEN CMC");
+				echo form_input($data2);
+				
+				$data3 = array(
+				  'type'        => 'submit',
+				  'name'          => 'update',
+				  'value'       =>  "OPEN CMC",
+				   'id' => 'opentrans',
+				  'class' => "btn btn-danger btn-xs"
+				);
+				echo form_input($data3);
+				
+				echo "&nbsp;";
+				echo "&nbsp;";
+				echo "<a href='".base_url()."cash/daily/report/".$transid."' class='btn btn-warning btn-xs' target='_blank'>Preview CMC</a>";
+				echo '</form>';
+			}
+			echo "&nbsp;";
+			echo "&nbsp;";
+			
+			if ($this->auth->perms("Verify CMC", $this->auth->user_id(), 3) == true) {
+			echo '<form action="'.current_url().'" id="verifytransaction" method="post">';
+				$data = array(
+				  'type'        => 'hidden',
+				  'name'          => 'transid',
+				  'value'       =>  $transid
+				);
+				echo form_input($data);
+				$data2 = array(
+				  'type'        => 'hidden',
+				  'name'          => 'update',
+				  'value'       =>  "Verify CMC"
+				);
+				echo form_input($data2);
+				$data3 = array(
+				  'type'        => 'submit',
+				  'name'          => 'update',
+				  'value'       =>  "Verify CMC",
+				  'id' => 'verifytrans',
+				  'class' => "btn btn-success btn-xs"
+				);
+				echo form_input($data3);	
+				echo '</form>';
+			}
+		break;
+		case "verified":
+			echo "Prepared by : ";
+			echo "<b>".$closedBy."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($closedate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			echo "Verified by : ";
+			echo "<b>".$verifiedby."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($verifydate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			if ($this->auth->perms("Audit", $this->auth->user_id(), 3) == true) {
+			echo '<form action="'.current_url().'" id="managetrans" method="post">';
+				$data = array(
+				  'type'        => 'hidden',
+				  'name'          => 'transid',
+				  'value'       =>  $transid
+				);
+				echo form_input($data);
+				
+				$data2 = array(
+				  'type'        => 'hidden',
+				  'name'          => 'update',
+				  'value'       =>  "Approve CMC"
+				);
+				echo form_input($data2);
+				
+				$data3 = array(
+				  'type'        => 'submit',
+				  'name'          => 'update',
+				  'value'       =>  "Approve CMC",
+				  'id' => 'approvetrans',
+				   'class' => "btn btn-success btn-xs"
+				);
+				echo form_input($data3);
+				echo '</form>';
+			}
+			
+			//for admin debug reset CMC
+			if( $this->auth->perms("reverse", $this->auth->user_id(), 3) == true) {
+				if( $this->auth->perms("Cash.Transactions", $this->auth->user_id(), 3) == true) {
+				echo '<form action="'.current_url().'" id="opentransaction" method="post">';
+					$data = array(
+					  'type'        => 'hidden',
+					  'name'          => 'transid',
+					  'value'       =>  $transid
+					);
+					echo form_input($data);
+					
+					$data2 = array(
+					  'type'        => 'hidden',
+					  'name'          => 'update',
+					  'value'       =>  "OPEN CMC");
+					echo form_input($data2);
+					
+					$data3 = array(
+					  'type'        => 'submit',
+					  'name'          => 'update',
+					  'value'       =>  "OPEN CMC",
+					   'id' => 'opentrans',
+					  'class' => "btn btn-danger btn-xs"
+					);
+					echo form_input($data3);				
+				
+					echo '</form>';
+				}
+			}
+			//admin debug/reset CMC
+			
+			echo "&nbsp;";
+			echo "&nbsp;";
+			echo "<a href='".base_url()."cash/daily/report/".$transid."' class='btn btn-warning btn-xs' target='_blank'>Preview CMC</a>";
+		break;
+		case "approved";
+			echo "Prepared by : ";
+			echo "<b>".$closedBy."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($closedate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			echo "Verified by : ";
+			echo "<b>".$verifiedby."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($verifydate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			echo "Approved by : ";
+			echo "<b>".$approvedby."</b>, ";
+			echo date("m-d-Y h:i:s",strtotime($approvedate));
+			echo "&nbsp;";
+			echo "&nbsp;";
+			echo "<a href='".base_url()."cash/daily/report/".$transid."' class='btn btn-warning btn-xs' target='_blank'>Preview CMC</a>";
+			
+			if( $this->auth->perms("reverse", $this->auth->user_id(), 3) == true) {
+				if( $this->auth->perms("Cash.Transactions", $this->auth->user_id(), 3) == true) {
+				echo '<form action="'.current_url().'" id="opentransaction" method="post">';
+					$data = array(
+					  'type'        => 'hidden',
+					  'name'          => 'transid',
+					  'value'       =>  $transid
+					);
+					echo form_input($data);
+					
+					$data2 = array(
+					  'type'        => 'hidden',
+					  'name'          => 'update',
+					  'value'       =>  "OPEN CMC");
+					echo form_input($data2);
+					
+					$data3 = array(
+					  'type'        => 'submit',
+					  'name'          => 'update',
+					  'value'       =>  "OPEN CMC",
+					   'id' => 'opentrans',
+					  'class' => "btn btn-danger btn-xs"
+					);
+					echo form_input($data3);				
+				
+					echo '</form>';
+				}
+			}
+		break;
+	}
+	
+	
+	if( $this->auth->perms("debug", $this->auth->user_id(), 3) == true) {
+	echo '<form action="'.current_url().'" id="managetrans" method="post">';
+				$data = array(
+				  'type'        => 'hidden',
+				  'name'          => 'transid',
+				  'value'       =>  $transid
+				);
+				echo form_input($data);
+				
+				$data2 = array(
+				  'type'        => 'hidden',
+				  'name'          => 'update',
+				  'value'       =>  "Recompute CMC");
+				echo form_input($data2);
+				
+				$data3 = array(
+				  'type'        => 'submit',
+				  'name'          => 'update',
+				  'value'       =>  "Recompute CMC",
+				  'class' => "btn btn-danger btn-xs"
+				);
+				echo form_input($data3);
+				echo "&nbsp;";
+				echo "&nbsp;";
+		echo '</form>';
+			}?>
+ </div>
+	</div>
+
+
+<?php if($cmcstatus == 'open') { ?>
+<!-- COLLECTIONS -->
+<div class="modal fade" id="collection" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog ">
+	<?php $this->load->view('cash/forms/collections');?>
+</div>
+</div>
+<!-- END OF COLLECTIONS-->
+
+<!-- DISBURSEMENTS -->
+<div class="modal fade" id="disburse" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog ">
+	<?php $this->load->view('cash/forms/disbursements');?>
+  </div>
+</div>
+<!-- BANKS -->
+<?php $this->load->view('cash/forms/bank');?>
+
+<div class="modal fade" id="adjust" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog ">
+  <?php $this->load->view('cash/forms/adjustment');?>
+ </div>
+</div>
+
+<div class="modal fade" id="deposit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog ">
+  <?php $this->load->view('cash/forms/recap');?>
+ </div>
+</div>
+<?php } ?>
+
+
+
+<script>
+$(document).ready(function() {
+    $("#tabs").tabs( {
+        "activate": function(event, ui) {
+            $( $.fn.dataTable.tables( true ) ).DataTable().columns.adjust();
+        }
+    } );
+     
+    $('table#coltable').dataTable( {
+        "scrollY": "200px",
+        "scrollCollapse": true,
+        "paging": false,
+        "jQueryUI": true
+    } );
+} );
+</script>

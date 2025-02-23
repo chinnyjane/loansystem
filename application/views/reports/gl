@@ -1,0 +1,5 @@
+<?php
+$tmpl = array ('table_open'  => '<table class="table table-bordered table-condensed table-striped table-hover " id="tableuser">' );
+$this->table->set_template($tmpl);
+
+?>

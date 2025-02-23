@@ -1,0 +1,9 @@
+<section class="logincontainer" >	<div align="center"><img src="<?php echo base_url();?>assets/img/LOGOGreentrans.png" /></div>
+	 <form class="form" method="post" action="">
+	 <label>Email Address</label>
+	 <input type="text" id="email" name="email" placeholder="Email Address" required>
+	 <label>Password</label>
+	<input type="password" placeholder="Password">
+	 <button class="okbutton" id="login">LOGIN</button> <a href="javascript:void()" id="forgot" required>Forgot Password?</a>	
+	</form>
+</section>
